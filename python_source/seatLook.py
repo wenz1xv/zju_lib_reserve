@@ -2,7 +2,7 @@ import requests,json,time,sys
 
 def getJson():
     url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/device.aspx'
-    date = '2019-05-02'
+    date = '2019-05-03'
     params ={
         'date':date,
         'act':'get_rsv_sta'
@@ -17,7 +17,7 @@ def getDate():
 
 def chose():
     content = getJson()
-    seat = input('search for seat:')
+    seat = input('search for seat:(press enter to get all seat)')
     if seat == 'wow':
         user = input('search for user:')
         newContent = user_fil_ter(content)
@@ -64,9 +64,7 @@ def fil_ter(obj):
                 'title': e['title'],
                 'state': e['state'],
                 'start': e['start'],
-                'end': e['end'] ,
-                'owner': e['owner'],
-                'accno': e['accno'],
+                'end': e['end'] 
             }
             count = count + 1
     else:
@@ -99,7 +97,4 @@ def write(data):
     seat_file.write(data)
     seat_file.close()
 
-def main():
-    print(chose())
-
-main()
+print(chose())

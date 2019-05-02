@@ -4,6 +4,7 @@ import time
 import os
 import configparser
 import json
+import sys
 
 # 登陆
 def login(arr, cookies, url):
@@ -47,6 +48,7 @@ def reserve(arr, cookies, url):
     params = {
         'dev_id': seat,
         'type': 'dev',
+        'test_name':'个人',
         'start': s_t,
         'end': e_t,
         'start_time': st,
@@ -140,6 +142,7 @@ def reserve_main():
 def SetTime():
     set_time = '24:00:15'
     print('定时器启动...')
+    count = 30
     while True:
         now = time.strftime('%H:%M:%S', time.localtime(time.time()))
         H = int(set_time.split(':')[0]) - int(now.split(':')[0])
@@ -155,14 +158,17 @@ def SetTime():
             time.sleep(60)
             sys.stdout.flush()
         elif sleepTime > 29:
-           sys.stdout.write('\r{0}'.format('设定时间：'+set_time+ '现在时间:'+now+'待机时间：'+str(sleepTime)))
+            sys.stdout.write('\r{0}'.format('设定时间：'+set_time+ '  现在时间:'+now+'  待机时间：'+str(sleepTime)))
             time.sleep(1)
             sys.stdout.flush()
         else:
-            print('\n 30s 后启动')
-            time.sleep(30)
-            print('now!')
-            return True
+            sys.stdout.write('\r{0}'.format(str(count)+ 's 后启动'))
+            time.sleep(1)
+            sys.stdout.flush()
+            count = count - 1
+            if count < 1:
+                print('now!')
+                return True
 
 
 # 主函数
