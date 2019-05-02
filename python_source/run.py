@@ -67,7 +67,7 @@ def getSeatId(seat):
         if e['title'] == seat:
             print('校对你的座位信息:')
             print(e)
-            time.sleep(3)
+            time.sleep(1)
             return e['devID']
     print('cannot find the seat.\n please try again\n')
     s = input('输入座位：')
@@ -125,7 +125,8 @@ def reserve_main():
     seat1 = reserveArr[2]
     seat2 = reserveArr[3]
     if login(user, cookies, login_url):
-        input('\n 登陆成功，Enter继续...')
+        print('\n 登陆成功...')
+        time.sleep(2)
         os.system('cls')
         if SetTime():
             reserve(seat, cookies, reserve_url)
@@ -137,7 +138,7 @@ def reserve_main():
 
 # 定时判断器
 def SetTime():
-    set_time = '24:00:00'
+    set_time = '24:00:15'
     print('定时器启动...')
     while True:
         now = time.strftime('%H:%M:%S', time.localtime(time.time()))
@@ -146,12 +147,20 @@ def SetTime():
         S = int(set_time.split(':')[2]) - int(now.split(':')[2])
         sleepTime = M*60+S+H*3600
         if H > 1:
-            print('剩余：',round(H+M/60,1), '小时', '待机中...')
-            time.sleep(3600)
-        elif sleepTime > 1:
-            print('设定时间：', set_time, '现在时间:', now, '待机时间：', sleepTime)
-            time.sleep(sleepTime)
+            sys.stdout.write('\r{0}'.format('剩余：'+str(round(H+M/60,1))+ '小时,待机中...'))
+            time.sleep(360)
+            sys.stdout.flush()
+        elif sleepTime > 120:
+            sys.stdout.write('\r{0}'.format('剩余：'+str(round(H*60+M+S/60,1))+ '分钟,待机中...'))
+            time.sleep(60)
+            sys.stdout.flush()
+        elif sleepTime > 29:
+           sys.stdout.write('\r{0}'.format('设定时间：'+set_time+ '现在时间:'+now+'待机时间：'+str(sleepTime)))
+            time.sleep(1)
+            sys.stdout.flush()
         else:
+            print('\n 30s 后启动')
+            time.sleep(30)
             print('now!')
             return True
 
@@ -162,8 +171,8 @@ def main():
     
     # 主进程
     reserve_main()
-    print('60s 后关机 \n 你可以关闭程序来阻止\n')
-    time.sleep(50)
+    print('30s 后关机 \n 你可以关闭程序来阻止\n')
+    time.sleep(20)
     print('10s后关机，可能不太能阻止了...')
     os.system('shutdown -s -f -t 10')
 
