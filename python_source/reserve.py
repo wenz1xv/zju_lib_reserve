@@ -1,6 +1,6 @@
 import requests
 import json
-import time
+import time,datetime
 import os
 import configparser
 import sys
@@ -61,15 +61,16 @@ def reserve(arr, cookies, url):
 # 转换座位id
 def getSeatId(seat):
     print('\n 寻找你的座位id...')
-    with open('./seat_data.json', 'r') as load_f:
-        json_file = json.load(load_f)
-        seatObj = json_file['data']
+    date =  datetime.date.today()
+    seatObj = getJson(date)
     for e in seatObj:
+        newe = fil_ter(e)
         if e['title'] == seat:
-            print('校对你的座位信息:')
-            print(e)
+            print('校对你的座位信息:\n')
+            for item in newe:
+                print(item,newe[item])
             time.sleep(3)
-            return e['devID']
+            return newe['devId']
     print('cannot find the seat.\n please try again\n')
     s = input('输入座位：')
     getSeatId(s)
@@ -79,7 +80,7 @@ def getSeatId(seat):
 def readSeat(seat):
     conf = configparser.ConfigParser()
     conf.read('./user_data.cfg')
-    date = conf.get(seat, 'reserve_date')
+    date = datetime.date.today() + datetime.timedelta(days=2)
     start_time = conf.get(seat, 'reserve_start_time')
     end_time = conf.get(seat, 'reserve_end_time')
     seat_source = conf.get(seat, 'seat')
@@ -302,9 +303,8 @@ def test():
         print('选项不存在，请输入 A/B/C/D')
         test()
 
-def getJson():
+def getJson(date):
     url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/device.aspx'
-    date = '2019-05-03'
     params ={
         'date':date,
         'act':'get_rsv_sta'
@@ -313,13 +313,11 @@ def getJson():
     content = json.loads(rep.text)
     return content['data']
 
-def getDate():
-    now = time.strftime('%Y-%m-%d',time.localtime(time.time()))
-    return now
 
 def chose():
-    content = getJson()
-    seat = input('search for seat:(press enter to get all seat)')
+    date = input('查询日期:(例如：2019-05-02)')
+    content = getJson(date)
+    seat = input('查询座位:(留空查询所有)')
     if seat == 'wow':
         user = input('search for user:')
         newContent = user_fil_ter(content)
@@ -350,7 +348,7 @@ def chose():
                 newContent.append(str(fil_ter(e)))
         data = '\n'.join(newContent)
         write(data)
-        return 'write in seat.txt'
+        return '内容写入 seat_info.txt，为避免下次查看影响，查看后请删除文件'
         
 
 def fil_ter(obj):
@@ -360,8 +358,7 @@ def fil_ter(obj):
         'kindName': obj['kindName'],
         'devName': obj['devName'],
         'open_time': '-'.join(obj['open']),
-        'labId': obj['labId'],
-        'devId': obj['devId'],
+        'devId': obj['devId']
     }
     count = 0
     if obj['ts'] != [] :
@@ -419,7 +416,9 @@ def main():
     else:
         choose = input('\n是否查看座位? y/n   ')
         if choose == 'y':
-            print(chose())
+            newe = chose()
+            for item in newe:
+                print(item,newe[item])
         input('press Enter to continue...')
         os.system('cls')
         print('进入预约系统...')
