@@ -76,7 +76,7 @@ def getSeatId(seat):
     getSeatId(s)
         
 
-# 从config读数据
+# 从config读座位信息
 def readSeat(seat):
     conf = configparser.ConfigParser()
     conf.read('./user_data.cfg')
@@ -103,7 +103,7 @@ def inputInfo(flag):
         seat = getSeatId(seat_source)
         return [[uid, pwd,False],[seat, date, start_time, end_time]]
 
-
+# 对config的总处理
 def confDeal():
     conf = configparser.ConfigParser()
     conf.read('./user_data.cfg')
@@ -190,7 +190,6 @@ def SetTime(set_time):
             time.sleep(1)
             sys.stdout.flush()
         else:
-            print('设定时间不足三十秒')
             sys.stdout.write('\r{0}'.format(str(count)+ 's 后启动'))
             time.sleep(1)
             sys.stdout.flush()
@@ -263,6 +262,7 @@ def Timer_test():
     if choose == 'y':
         test()
 
+# 登陆测试
 def loginTest():
     main_url = 'http://ic.zju.edu.cn/ClientWeb/xcus/ic2/Default.aspx'
     login_url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/login.aspx'
@@ -303,6 +303,7 @@ def test():
         print('选项不存在，请输入 A/B/C/D')
         test()
 
+# 获取座位信息
 def getJson(date):
     url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/device.aspx'
     params ={
@@ -313,7 +314,7 @@ def getJson(date):
     content = json.loads(rep.text)
     return content['data']
 
-
+# 座位信息总处理
 def chose():
     date = input('查询日期:(例如：2019-05-02)')
     content = getJson(date)
@@ -326,7 +327,11 @@ def chose():
             if e['owner'] == user:
                 user_lst.append(e)
         if user_lst != []:
-            return user_lst
+            for item in range(len(user_lst)):
+                print(user_lst[item])
+            time.sleep(10)
+            os.system('cls')
+            chose()
         else:
             print('Cannot find the user')
             time.sleep(3)
@@ -335,7 +340,10 @@ def chose():
     elif seat != '':
         for e in content:
             if e['title'] == seat:
-                return fil_ter(e)
+                newe = fil_ter(e)
+                for item in newe:
+                    print(item,newe[item])
+                return ''
         else:
             print('Cannot find the seat')
             time.sleep(3)
@@ -350,7 +358,7 @@ def chose():
         write(data)
         return '内容写入 seat_info.txt，为避免下次查看影响，查看后请删除文件'
         
-
+# 筛选json
 def fil_ter(obj):
     reobj = {
         'className':  obj['className'],
@@ -376,6 +384,7 @@ def fil_ter(obj):
         reobj['user'] = 'no user' 
     return reobj
 
+# 筛选json-为用户
 def user_fil_ter(lst):
     relst =[]
     for obj in lst:
@@ -396,7 +405,7 @@ def user_fil_ter(lst):
                 relst.append(reobj)
     return relst
 
-
+# 写入data到seat_info.txt
 def write(data):
     seat_file = open('seat_info.txt','w')
     seat_file.write(data)
@@ -405,7 +414,7 @@ def write(data):
 
 # 主函数
 def main():
-    choose = input('\n***************************************\n* 欢迎使用图书馆自动预约-这是完全模式 *\n***************************************\n*        -在完成必要步骤后            *\n*      -软件将在00:00进行预约         *\n*       -预约完成自动关机             *\n*        ---键入y进入测试模式         *\n***************************************\n*         Powered by wenz_xv          *\n***************************************\n    是否测试：y/n ')
+    choose = input('\n***************************************\n* 欢迎使用图书馆自动预约-这是完全模式 *\n* 为避免座位的恶性再分配-请勿传播程序 *\n***************************************\n*        -在完成必要步骤后            *\n*      -软件将在00:00进行预约         *\n*       -预约完成自动关机             *\n*        ---键入y进入测试模式         *\n***************************************\n*         Powered by wenz_xv          *\n***************************************\n    是否测试：y/n ')
     if choose == 'y':
         test()
     # 主进程
@@ -416,9 +425,7 @@ def main():
     else:
         choose = input('\n是否查看座位? y/n   ')
         if choose == 'y':
-            newe = chose()
-            for item in newe:
-                print(item,newe[item])
+            print(chose())
         input('press Enter to continue...')
         os.system('cls')
         print('进入预约系统...')
