@@ -3,8 +3,7 @@ import json
 import time
 import os
 import configparser
-import json
-import sys
+import sys,datetime
 
 # 登陆
 def login(arr, cookies, url):
@@ -62,23 +61,58 @@ def reserve(arr, cookies, url):
 # 转换座位id
 def getSeatId(seat):
     print('\n 寻找你的座位id...')
-    with open('./seat_data.json', 'r') as load_f:
-        json_file = json.load(load_f)
-        seatObj = json_file['data']
+    date =  datetime.date.today()
+    seatObj = getJson(date)
     for e in seatObj:
+        newe = fil_ter(e)
         if e['title'] == seat:
             print('校对你的座位信息:')
-            print(e)
-            time.sleep(1)
-            return e['devID']
+            for item in newe:
+                print(item,newe[item])
+            time.sleep(3)
+            return newe['devId']
     print('cannot find the seat.\n please try again\n')
     s = input('输入座位：')
     getSeatId(s)
 
+def getJson(date):
+    url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/device.aspx'
+    params ={
+        'date':date,
+        'act':'get_rsv_sta'
+    }
+    rep = requests.get(url,params = params)
+    content = json.loads(rep.text)
+    return content['data']
+
+def fil_ter(obj):
+    reobj = {
+        'className':  obj['className'],
+        'labName': obj['labName'],
+        'kindName': obj['kindName'],
+        'devName': obj['devName'],
+        'open_time': '-'.join(obj['open']),
+        'devId': obj['devId']
+    }
+    count = 0
+    if obj['ts'] != [] :
+        user = {}
+        for e in obj['ts']:
+            user = 'user '+ str(count)
+            reobj[user] = {
+                'title': e['title'],
+                'state': e['state'],
+                'start': e['start'],
+                'end': e['end']
+            }
+            count = count + 1
+    else:
+        reobj['user'] = 'no user' 
+    return reobj
 
 # 从config读数据
 def readSeat(conf,seat):
-    date = conf.get(seat, 'reserve_date')
+    date = datetime.date.today() + datetime.timedelta(days=2)
     start_time = conf.get(seat, 'reserve_start_time')
     end_time = conf.get(seat, 'reserve_end_time')
     seat_source = conf.get(seat, 'seat')

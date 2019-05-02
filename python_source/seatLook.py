@@ -1,8 +1,7 @@
-import requests,json,time,sys
+import requests,json,time,sys,os
 
-def getJson():
+def getJson(date):
     url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/device.aspx'
-    date = '2019-05-03'
     params ={
         'date':date,
         'act':'get_rsv_sta'
@@ -11,12 +10,10 @@ def getJson():
     content = json.loads(rep.text)
     return content['data']
 
-def getDate():
-    now = time.strftime('%Y-%m-%d',time.localtime(time.time()))
-    return now
 
 def chose():
-    content = getJson()
+    date = input('search date:')
+    content = getJson(date)
     seat = input('search for seat:(press enter to get all seat)')
     if seat == 'wow':
         user = input('search for user:')
@@ -28,13 +25,19 @@ def chose():
         if user_lst != []:
             return user_lst
         else:
-            return 'Cannot find the user' 
+            print('Cannot find the user')
+            time.sleep(3)
+            os.system('cls')
+            chose() 
     elif seat != '':
         for e in content:
             if e['title'] == seat:
                 return fil_ter(e)
         else:
-            return 'Cannot find the seat'
+            print('Cannot find the seat')
+            time.sleep(3)
+            os.system('cls')
+            chose()
     else:
         newContent = []
         for e in content:
@@ -64,7 +67,7 @@ def fil_ter(obj):
                 'title': e['title'],
                 'state': e['state'],
                 'start': e['start'],
-                'end': e['end'] 
+                'end': e['end']
             }
             count = count + 1
     else:
