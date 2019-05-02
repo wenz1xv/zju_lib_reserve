@@ -177,7 +177,15 @@ def SetTime(set_time):
         M = int(set_time.split(':')[1]) - int(now.split(':')[1])
         S = int(set_time.split(':')[2]) - int(now.split(':')[2])
         sleepTime = M*60+S+H*3600
-        if H > 1:
+        if H>23:
+            sys.stdout.write('\r{0}'.format(str(count)+ 's 后启动'))
+            time.sleep(1)
+            sys.stdout.flush()
+            count = count - 1
+            if count < 1:
+                print('now!')
+                return True
+        elif H > 1 :
             sys.stdout.write('\r{0}'.format('剩余：'+str(round(H+M/60,1))+ '小时,待机中...'))
             time.sleep(360)
             sys.stdout.flush()
