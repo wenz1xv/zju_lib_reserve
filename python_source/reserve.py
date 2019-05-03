@@ -3,7 +3,7 @@ import json
 import time,datetime
 import os
 import configparser
-import sys
+import sys,hashlib
 
 # 登陆
 def login(arr, cookies, url):
@@ -66,7 +66,7 @@ def getSeatId(seat):
     for e in seatObj:
         newe = fil_ter(e)
         if e['title'] == seat:
-            print('校对你的座位信息:\n')
+            print('校对你的座位信息:(用户为今日使用者)\n')
             for item in newe:
                 print(item,newe[item])
             time.sleep(3)
@@ -324,10 +324,12 @@ def getJson(date):
 
 # 座位信息总处理
 def chose():
-    date = input('查询日期:(例如：2019-05-02)')
+    date = input('查询日期:(例如：2019-05-02,留空查询今日)')
+    if date == '':
+        date = datetime.date.today()
     content = getJson(date)
     seat = input('查询座位:(留空查询所有)')
-    if seat == 'wow':
+    if encipher(seat):
         user = input('search for user:')
         newContent = user_fil_ter(content)
         user_lst = []
@@ -420,6 +422,14 @@ def write(data):
     seat_file.write(data)
     seat_file.close()
 
+def encipher(ipt):
+    if ipt == '':
+        ipt = input('验证码：')
+    hl = hashlib.md5()
+    hl.update(ipt.encode(encoding='utf-8'))
+    if hl.hexdigest() == 'bcedc450f8481e89b1445069acdc3dd9':
+        return True
+
 
 # 主函数
 def main():
@@ -444,5 +454,5 @@ def main():
         print('10s后关机，可能不太能阻止了...')
         os.system('shutdown -s -f -t 10')
 
-
-main()
+if encipher(''):
+    main()

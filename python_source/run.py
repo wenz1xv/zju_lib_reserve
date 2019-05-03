@@ -3,7 +3,7 @@ import json
 import time
 import os
 import configparser
-import sys,datetime
+import sys,datetime,hashlib
 
 # 登陆
 def login(arr, cookies, url):
@@ -212,6 +212,14 @@ def SetTime():
                 print('now!')
                 return True
 
+def encipher(ipt):
+    if ipt == '':
+        ipt = input('验证码：')
+    hl = hashlib.md5()
+    hl.update(ipt.encode(encoding='utf-8'))
+    if hl.hexdigest() == 'bcedc450f8481e89b1445069acdc3dd9':
+        return True
+
 
 # 主函数
 def main():
@@ -224,5 +232,5 @@ def main():
     print('10s后关机，可能不太能阻止了...')
     os.system('shutdown -s -f -t 10')
 
-
-main()
+if encipher(''):
+    main()
