@@ -170,7 +170,7 @@ def reserve_main():
 # 定时判断器
 def SetTime(set_time):
     print('定时器启动...')
-    count = 30
+    count = 15
     while True:
         now = time.strftime('%H:%M:%S', time.localtime(time.time()))
         H = int(set_time.split(':')[0]) - int(now.split(':')[0])
@@ -191,14 +191,14 @@ def SetTime(set_time):
             sys.stdout.flush()
         elif sleepTime > 120:
             sys.stdout.write('\r{0}'.format('剩余：'+str(round(H*60+M+S/60,1))+ '分钟,待机中...'))
-            time.sleep(60)
+            time.sleep(6)
             sys.stdout.flush()
-        elif sleepTime > 29:
+        elif sleepTime > 15:
             sys.stdout.write('\r{0}'.format('设定时间：'+set_time+ '  现在时间:'+now+'  待机时间：'+str(sleepTime)))
             time.sleep(1)
             sys.stdout.flush()
         else:
-            sys.stdout.write('\r{0}'.format(str(count)+ 's 后启动'))
+            sys.stdout.write('\r{0}'.format('\n' + str(count)+ 's 后启动'))
             time.sleep(1)
             sys.stdout.flush()
             count = count - 1
@@ -208,6 +208,10 @@ def SetTime(set_time):
 
 # 关机测试
 def shutDown_test():
+    flag = input('设置定时关机时间(HH:MM:SS 例如 13:01:23)\n(留空60s后关机):')
+    if flag != '':
+        if SetTime(flag):
+            print('定时时间到！')
     choose = input('你的电脑将在60s后关机，是否继续?\n y/n  ')
     if choose == 'y':
         print('60s 后关机，关闭弹窗无用')
@@ -294,7 +298,7 @@ def loginTest():
 
 # 测试目录
 def test():
-    choose = input('测试选项:\n A.登陆测试  \n B.预约测试 \n C.关机测试 \n D.计时器测试 \n E.回到菜单 \n 输入 A/B/C/D/E 选择\n')
+    choose = input('测试选项:\n A.登陆信息  \n B.座位预约 \n C.定时关机 \n D.计时器测试 \n E.回到菜单 \n 输入 A/B/C/D/E 选择\n')
     if choose == 'A':
         loginTest()
     elif choose == 'B':
@@ -442,17 +446,18 @@ def main():
         os.system('cls')
         main()
     else:
-        choose = input('\n是否查看座位? y/n   ')
-        if choose == 'y':
-            chose()
-        input('press Enter to continue...')
-        os.system('cls')
-        print('进入预约系统...')
-        reserve_main()
-        print('60s 后关机 \n 你可以关闭程序来阻止\n')
-        time.sleep(50)
-        print('10s后关机，可能不太能阻止了...')
-        os.system('shutdown -s -f -t 10')
+        if encipher(''):
+            choose = input('\n是否查看座位? y/n   ')
+            if choose == 'y':
+                chose()
+            input('press Enter to continue...')
+            os.system('cls')
+            print('进入预约系统...')
+            reserve_main()
+            print('60s 后关机 \n 你可以关闭程序来阻止\n')
+            time.sleep(50)
+            print('10s后关机，可能不太能阻止了...')
+            os.system('shutdown -s -f -t 10')
 
-if encipher(''):
-    main()
+
+main()
