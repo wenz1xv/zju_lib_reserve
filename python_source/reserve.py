@@ -351,7 +351,7 @@ def chose():
                 newe = fil_ter(e)
                 for item in newe:
                     print(item,newe[item])
-                return ''
+                time.sleep(3)
         else:
             print('Cannot find the seat')
             time.sleep(3)
@@ -364,7 +364,8 @@ def chose():
                 newContent.append(str(fil_ter(e)))
         data = '\n'.join(newContent)
         write(data)
-        return '内容写入 seat_info.txt，为避免下次查看影响，查看后请删除文件'
+        print('内容写入 seat_info.txt，为避免下次查看影响，查看后请删除文件')
+        time.sleep(3)
         
 # 筛选json
 def fil_ter(obj):
@@ -433,7 +434,7 @@ def main():
     else:
         choose = input('\n是否查看座位? y/n   ')
         if choose == 'y':
-            print(chose())
+            chose()
         input('press Enter to continue...')
         os.system('cls')
         print('进入预约系统...')
