@@ -14,8 +14,7 @@ def login(arr, cookies, url):
         'pwd': pwd,
         'act': 'login',
     }
-    rep = requests.post(url, cookies=cookies, data=body)
-    reply = json.loads(rep.text)
+    reply = json.loads(requests.post(url, cookies=cookies, data=body).text)
     if reply['msg'] == 'ok':
         print('\n login success')
         print('Welcome '+reply['data']['name']+'\n')
@@ -61,7 +60,7 @@ def reserve(arr, cookies, url):
 # 转换座位id
 def getSeatId(seat):
     print('\n 寻找你的座位id...')
-    date =  datetime.date.today()
+    date =  str(datetime.date.today())
     seatObj = getJson(date)
     for e in seatObj:
         newe = fil_ter(e)
@@ -94,25 +93,11 @@ def fil_ter(obj):
         'open_time': '-'.join(obj['open']),
         'devId': obj['devId']
     }
-    count = 0
-    if obj['ts'] != [] :
-        user = {}
-        for e in obj['ts']:
-            user = 'user '+ str(count)
-            reobj[user] = {
-                'title': e['title'],
-                'state': e['state'],
-                'start': e['start'],
-                'end': e['end']
-            }
-            count = count + 1
-    else:
-        reobj['user'] = 'no user' 
     return reobj
 
 # 从config读数据
 def readSeat(conf,seat):
-    date = datetime.date.today() + datetime.timedelta(days=2)
+    date = str(datetime.date.today() + datetime.timedelta(days=2))
     start_time = conf.get(seat, 'reserve_start_time')
     end_time = conf.get(seat, 'reserve_end_time')
     seat_source = conf.get(seat, 'seat')

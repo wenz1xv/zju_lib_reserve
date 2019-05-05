@@ -3,41 +3,51 @@ import json
 import time,datetime
 import os
 import configparser
-import sys,hashlib
+import sys,hashlib,getpass
+
+# version2.0
 
 # 登陆
-def login(arr, cookies, url):
-    uid = arr[0]
-    pwd = arr[1]
-    flag = arr[2]
-    body = {
-        'id': uid,
-        'pwd': pwd,
-        'act': 'login',
-    }
-    rep = requests.post(url, cookies=cookies, data=body)
-    reply = json.loads(rep.text)
-    if reply['msg'] == 'ok':
-        print('\n login success')
-        print('Welcome '+reply['data']['name']+'\n')
-        if flag:
-            return reply['data']
-        else:
-            return True
+def login(arr, cookies):
+    judurl = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/login.aspx?act=is_login'
+    repj = json.loads(requests.get(judurl,cookies = cookies).text)
+    if repj['ret'] == 1:
+        return True
     else:
-        print('login failed,\n please Try again')
-        ide = input('id:')
-        pwde = input('pwd')
-        login([ide,pwde],cookies,url)
+        url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/login.aspx'
+        uid = arr[0]
+        pwd = arr[1]
+        flag = arr[2]
+        body = {
+            'id': uid,
+            'pwd': pwd,
+            'act': 'login',
+        }
+        rep = requests.post(url, cookies=cookies, data=body)
+        reply = json.loads(rep.text)
+        if reply['msg'] == 'ok':
+            print('\n login success')
+            print('Welcome '+reply['data']['name']+'\n')
+            if flag:
+                return reply['data']
+            else:
+                return True
+        else:
+            print('login failed,\n please Try again')
+            ide = input('id:')
+            pwde = input('pwd')
+            login([ide,pwde,False],cookies)
 
 # 获取asp.net SessionID
-def getSid(url):
+def getSid():
+    url = 'http://ic.zju.edu.cn/ClientWeb/xcus/ic2/Default.aspx'
     rep = requests.get(url)
     cookies_rep = rep.cookies
     return cookies_rep
 
 # 预约座位
-def reserve(arr, cookies, url):
+def reserve(arr, cookies):
+    url = 'http://ic.zju.edu.cn/ClientWeb//pro/ajax/reserve.aspx'
     seat = arr[0]
     date = arr[1]
     st = arr[2]
@@ -54,37 +64,36 @@ def reserve(arr, cookies, url):
         'end_time': et,
         'act': 'set_resv'
     }
-
     rep = requests.get(url, params=params, cookies=cookies)
-    print(rep,'\n ...<Response [200]>代表正常  <Response [500]> 代表时间设置有误，具体是否成功请登陆网站查看')
+    print(rep)
+    debug = getpass.getpass('\n ...<Response [200]>代表正常  <Response [500]> 代表时间设置有误，具体是否成功请登陆网站查看,Enter to contiune...')
+    if debug == 'd':
+        print(rep.text)
 
 # 转换座位id
-def getSeatId(seat):
+def getSeatId(seat,date):
     print('\n 寻找你的座位id...')
-    date =  datetime.date.today()
     seatObj = getJson(date)
     for e in seatObj:
-        newe = fil_ter(e)
         if e['title'] == seat:
-            print('校对你的座位信息:(用户为今日使用者)\n')
-            for item in newe:
-                print(item,newe[item])
-            time.sleep(3)
-            return newe['devId']
+            print('校对 '+date+' 座位信息:')
+            print(fil_ter(e,1))
+            time.sleep(10)
+            return e['devId']
     print('cannot find the seat.\n please try again\n')
     s = input('输入座位：')
-    getSeatId(s)
+    getSeatId(s,date)
         
 
 # 从config读座位信息
 def readSeat(seat):
     conf = configparser.ConfigParser()
     conf.read('./user_data.cfg')
-    date = datetime.date.today() + datetime.timedelta(days=2)
+    date = str(datetime.date.today() + datetime.timedelta(days=2))
     start_time = conf.get(seat, 'reserve_start_time')
     end_time = conf.get(seat, 'reserve_end_time')
     seat_source = conf.get(seat, 'seat')
-    seat = getSeatId(seat_source)
+    seat = getSeatId(seat_source,str(datetime.date.today()))
     return [seat, date, start_time, end_time]
 
 # 输入数据
@@ -96,11 +105,15 @@ def inputInfo(flag):
     else:
         uid = input('id:')
         pwd = input('password:')
-        date = input('预约日期:(例如2019-4-30)')
+        flag = input('预约日期:(留空今日，tm-明日)')
+        if flag == 'tm':
+            date = str(datetime.date.today() + datetime.timedelta(days=1))
+        else:
+            date = str(datetime.date.today())
         start_time = input('开始时间:(例如:8:30写作0830)')
         end_time = input('结束时间:(例如:12:30写作1230)')
         seat_source = input('选择座位:(例如F3-001)')
-        seat = getSeatId(seat_source)
+        seat = getSeatId(seat_source,date)
         return [[uid, pwd,False],[seat, date, start_time, end_time]]
 
 # 对config的总处理
@@ -132,11 +145,7 @@ def confDeal():
 
 # 预约主体：获取sid、登陆、预约
 def reserve_main():
-    host = 'http://ic.zju.edu.cn/ClientWeb'
-    main_url = host+'/xcus/ic2/Default.aspx'
-    login_url = host+'/pro/ajax/login.aspx'
-    reserve_url = host+'/pro/ajax/reserve.aspx'
-    cookies = getSid(main_url)
+    cookies = getSid()
     choose = input('是否使用cfg配置文件?\n y/n   ')
     if choose == 'y':
         reserveArr = confDeal()
@@ -145,26 +154,26 @@ def reserve_main():
         seat = reserveArr[1]
         seat1 = reserveArr[2]
         seat2 = reserveArr[3]
-        if login(user, cookies, login_url):
+        if login(user, cookies):
            input('\n 登陆成功，Enter继续...')
            os.system('cls')
            if SetTime('24:00:15'):
-                reserve(seat, cookies, reserve_url)
+                reserve(seat, cookies)
                 if seat1 != False:
-                    reserve(seat1,cookies,reserve_url)
+                    reserve(seat1,cookies)
                 if seat2 != False:
-                    reserve(seat2,cookies,reserve_url)
+                    reserve(seat2,cookies)
     else:
         reserveArr = inputInfo(False)
         user = reserveArr[0]
         user.append(False)
         seat = reserveArr[1]
-        if login(user, cookies, login_url):
+        if login(user, cookies):
            input('\n 登陆成功，Enter继续...')
            os.system('cls')
            if SetTime('24:00:15'):
-                login(user,cookies, login_url)
-                reserve(seat, cookies, reserve_url)
+                login(user,cookies)
+                reserve(seat, cookies)
 
 
 # 定时判断器
@@ -198,9 +207,10 @@ def SetTime(set_time):
             time.sleep(1)
             sys.stdout.flush()
         else:
-            sys.stdout.write('\r{0}'.format('\n' + str(count)+ 's 后启动'))
-            time.sleep(1)
+            os.system('cls')
+            sys.stdout.write('\r{0}'.format('设定时间：'+set_time+ '  现在时间:'+now+'  待机时间：'+str(count)))
             sys.stdout.flush()
+            time.sleep(1)
             count = count - 1
             if count < 1:
                 print('now!')
@@ -225,40 +235,19 @@ def shutDown_test():
 
 # 预约测试-无定时
 def reserve_test():
-    host = 'http://ic.zju.edu.cn/ClientWeb'
-    main_url = host+'/xcus/ic2/Default.aspx'
-    login_url = host+'/pro/ajax/login.aspx'
-    reserve_url = host+'/pro/ajax/reserve.aspx'
-    cookies = getSid(main_url)
-    choose = input('是否使用cfg配置文件?\n y/n   ')
-    if choose == 'y':
-        reserveArr = confDeal()
-        user = reserveArr[0]
-        user.append(False)
-        seat = reserveArr[1]
-        seat1 = reserveArr[2]
-        seat2 = reserveArr[3]
-        if login(user, cookies, login_url):
-           time.sleep(1)
-           os.system('cls')
-           reserve(seat, cookies, reserve_url)
-           if seat1 != False:
-                reserve(seat1,cookies,reserve_url)
-           if seat2 != False:
-                reserve(seat2,cookies,reserve_url)
-    else:
-        reserveArr = inputInfo(False)
-        user = reserveArr[0]
-        seat = reserveArr[1]
-        if login(user, cookies, login_url):
-            time.sleep(1)
-            os.system('cls')
-            login(user,cookies, login_url)
-            reserve(seat, cookies, reserve_url)
+    cookies = getSid()
+    reserveArr = inputInfo(False)
+    user = reserveArr[0]
+    seat = reserveArr[1]
+    if login(user, cookies):
+        time.sleep(1)
+        os.system('cls')
+        login(user,cookies)
+        reserve(seat, cookies)
     # 回到test
     time.sleep(5)
     os.system('cls')
-    choose = input('是否继续测试? \n y/n  ')
+    choose = input('是否回到模块? \n y/n  ')
     if choose == 'y':
         test()
 
@@ -270,29 +259,19 @@ def Timer_test():
     # 回到test
     time.sleep(5)
     os.system('cls')
-    choose = input('是否继续测试? \n y/n  ')
+    choose = input('是否回到模块? \n y/n  ')
     if choose == 'y':
         test()
 
 # 登陆测试
 def loginTest():
-    main_url = 'http://ic.zju.edu.cn/ClientWeb/xcus/ic2/Default.aspx'
-    login_url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/login.aspx'
-    cookies = getSid(main_url)
-    choose = input('是否使用cfg配置文件?\n y/n   ')
-    if choose == 'y':
-        reserveArr = confDeal()
-        user = reserveArr[0]
-        user.append(True)
-        print('账户信息：\n',login(user, cookies, login_url))
-    else:
-        user = inputInfo(True)
-        print('账户信息：\n',login(user, cookies, login_url))
-
-    # 回到test
+    cookies = getSid()
+    user = inputInfo(True)
+    print('账户信息：\n',login(user, cookies))
     time.sleep(5)
+    # 回到test.sleep(5)
     os.system('cls')
-    choose = input('是否继续测试? \n y/n  ')
+    choose = input('是否回到模块? \n y/n  ')
     if choose == 'y':
         test()
 
@@ -327,137 +306,202 @@ def getJson(date):
     return content['data']
 
 # 座位信息总处理
-def chose():
-    date = input('查询日期:(例如：2019-05-02,留空查询今日)')
-    if date == '':
-        date = datetime.date.today()
+def seatLook():
+    flag = input('查询日期:(留空今天，tm-明天)')
+    if flag == 'tm':
+        date = str(datetime.date.today()+ datetime.timedelta(days=1))
+    else:
+        date = str(datetime.date.today())
     content = getJson(date)
-    seat = input('查询座位:(留空查询所有)')
+    seat = input('查询座位:(留空查询所有座位信息)')
     if encipher(seat):
-        user = input('search for user:')
-        newContent = user_fil_ter(content)
-        user_lst = []
-        for e in newContent:
-            if e['owner'] == user:
-                user_lst.append(e)
-        if user_lst != []:
-            for item in range(len(user_lst)):
-                print(user_lst[item])
-            time.sleep(10)
-            os.system('cls')
-            chose()
-        else:
-            print('Cannot find the user')
-            time.sleep(3)
-            os.system('cls')
-            chose() 
+        newContent = []
+        filename = 'seat_info'+str(date)+'.txt'
+        for e in content:
+            if e['labId'] != '173':
+                newContent.append(fil_ter(e,2))
+        data = '\n'.join(newContent)
+        seat_file = open(filename,'w')
+        seat_file.write(data)
+        seat_file.close()
+        print('内容写入 '+filename)
+        time.sleep(3)        
     elif seat != '':
         for e in content:
             if e['title'] == seat:
-                newe = fil_ter(e)
-                for item in newe:
-                    print(item,newe[item])
+                print(fil_ter(e,1))
                 time.sleep(3)
         else:
             print('Cannot find the seat')
             time.sleep(3)
             os.system('cls')
-            chose()
+            seatLook()
     else:
         newContent = []
+        filename = 'seat_info'+str(date)+'.txt'
         for e in content:
             if e['labId'] != '173':
-                newContent.append(str(fil_ter(e)))
+                newContent.append(fil_ter(e,1))
         data = '\n'.join(newContent)
-        write(data)
-        print('内容写入 seat_info.txt，为避免下次查看影响，查看后请删除文件')
+        seat_file = open(filename,'w')
+        seat_file.write(data)
+        seat_file.close()
+        print('内容写入 '+filename)
         time.sleep(3)
         
 # 筛选json
-def fil_ter(obj):
-    reobj = {
-        'className':  obj['className'],
-        'labName': obj['labName'],
-        'kindName': obj['kindName'],
-        'devName': obj['devName'],
-        'open_time': '-'.join(obj['open']),
-        'devId': obj['devId']
-    }
-    count = 0
-    if obj['ts'] != [] :
-        user = {}
-        for e in obj['ts']:
-            user = 'user '+ str(count)
-            reobj[user] = {
-                'title': e['title'],
-                'state': e['state'],
-                'start': e['start'],
-                'end': e['end']
-            }
-            count = count + 1
-    else:
-        reobj['user'] = 'no user' 
-    return reobj
-
-# 筛选json-为用户
-def user_fil_ter(lst):
-    relst =[]
-    for obj in lst:
+def fil_ter(obj,n):
+    if n == 1:
+        retxt = '\n className: '+  str(obj['className'])+'   labName: '+ str(obj['labName'])+'   kindName: '+ str(obj['kindName'])+' devName: '+ str(obj['devName'])+'\n open_time: '+ '-'.join(obj['open'])+'   devId: '+ str(obj['devId'])
+        count = 0
         if obj['ts'] != [] :
             for e in obj['ts']:
-                reobj = {
-                    'owner': e['owner'],
-                    'accno': e['accno'],
-                    'title': e['title'],
-                    'start': e['start'],
-                    'end': e['end'] ,
-                    'className':  obj['className'],
-                    'labName': obj['labName'],
-                    'kindName': obj['kindName'],
-                    'devName': obj['devName'],
-                    'state': e['state'],
-                }
-                relst.append(reobj)
-    return relst
+                user = '\n user '+ str(count)
+                retxt = retxt + user + '\n title: '+ str(e['title']) +' state: '+ str(e['state'])+'\n start: '+ str(e['start']) +'  end: '+ str(e['end'])
+                count = count + 1
+        else:
+            retxt = retxt+ '\n Free' 
+        return retxt
+    if n == 2:
+        devtxt = '\n className: '+  str(obj['className'])+'   labName: '+ str(obj['labName'])+'   kindName: '+ str(obj['kindName'])+' devName: '+ str(obj['devName'])+'   devId: '+ str(obj['devId'])
+        timetxt = '\n open_time: '+ '-'.join(obj['open'])
+        retxt = devtxt+timetxt
+        count = 0
+        if obj['ts'] != [] :
+            for e in obj['ts']:
+                user = str(e['owner'])+'   '+str(e['accno'])
+                retxt = retxt + user + '\n title: '+ str(e['title']) +' state: '+ str(e['state'])+'\n start: '+ str(e['start']) +'  end: '+ str(e['end'])
+                count = count + 1
+        else:
+            retxt = retxt+ '\n Free' 
+        return retxt
+    # else:
+    #     reobj = {
+    #         'className':  obj['className'],
+    #         'labName': obj['labName'],
+    #         'kindName': obj['kindName'],
+    #         'devName': obj['devName'],
+    #         'open_time': '-'.join(obj['open']),
+    #         'devId': obj['devId']
+    #     }
+    #     count = 0
+    #     if obj['ts'] != [] :
+    #         for e in obj['ts']:
+    #             user = 'user '+ str(count)
+    #             reobj[user] = {
+    #                 'title': e['title'],
+    #                 'state': e['state'],
+    #                 'start': e['start'],
+    #                 'end': e['end']
+    #             }
+    #             count = count + 1
+    #     else:
+    #         reobj['user'] = 'Free' 
+    #     return reobj
 
-# 写入data到seat_info.txt
-def write(data):
-    seat_file = open('seat_info.txt','w')
-    seat_file.write(data)
-    seat_file.close()
+def userDetial(accno):
+    url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/account.aspx'
+    params ={
+        'accno':accno,
+        'act':'get_acc_accno'
+    }
+    rep = requests.get(url,params = params)
+    return rep.text
 
+# 用户数据获得
+def userData():
+    # 确定日期
+    flag = input('查询日期:(留空今天，tm-明天)')
+    if flag == 'tm':
+        date = datetime.date.today()+ datetime.timedelta(days=1)
+    else:
+        date = datetime.date.today()
+    # 拿到当天所有座位信息
+    content = getJson(date)
+    # 输入用户
+    user = input('search for user:(empty for all users)')
+    if user != '':
+        prtxt = ''
+        for obj in content:
+            if obj['ts']['owner'] == user:
+                for e in obj['ts']:
+                    restr = '\n owner:'+ str(e['owner']) +'\n accno:' + str(e['accno'])+'\n title:' + str(e['title'])+'\n start:'+ str(e['start']) + '   end:'+ str(e['end']) +'\n className:'+  str(obj['className'])+'     labName:'+ str(obj['labName']) +'       kindName:'+ str(obj['kindName'])+'     devName:'+ str(obj['devName'])+'\n state:'+ str(e['state'])
+                    accno = obj['accno']
+                    prtxt = prtxt +restr+'\n'
+        if prtxt != '':
+            print(prtxt)
+            scc = getpass.getpass('press Enter to continue...')
+            if encipher(scc):
+                print(userDetial(accno))
+            time.sleep(15)
+            os.system('cls')
+            reserve_sys()
+        else:
+            print('Cannot find the user')
+            time.sleep(3)
+            os.system('cls')
+            reserve_sys()
+    else:            
+        filename = 'user_info'+str(date)+'.txt'
+        txtdata = ''
+        for obj in content:
+            if obj['ts'] != [] :
+                for e in obj['ts']:
+                    restr = '\n owner:'+ str(e['owner'])+'\n accno:' + str(e['accno'])+'\n title:' + str(e['title'])+'\n start:'+ str(e['start']) + '   end:'+ str(e['end']) +'\n className:'+ str(obj['className'])+'     labName:'+ str(obj['labName']) +'       kindName:'+ str(obj['kindName'])+'     devName:'+ str(obj['devName'])+'\n state:'+ str(e['state'])
+                    txtdata = txtdata+restr+'\n'
+        seat_file = open(filename,'w')
+        seat_file.write(txtdata)
+        seat_file.close()
+        print('内容写入 '+filename)
+        time.sleep(3)
+        os.system('cls')
+        reserve_sys()
+    
+# 验证器
 def encipher(ipt):
-    if ipt == '':
-        ipt = input('验证码：')
+    if ipt == ' ':
+        ipt = input('请输入验证码以继续：')
     hl = hashlib.md5()
     hl.update(ipt.encode(encoding='utf-8'))
     if hl.hexdigest() == 'bcedc450f8481e89b1445069acdc3dd9':
         return True
+    elif ipt == '':
+        return False
+    else:
+        print('验证码错误,程序退出')
 
+#预约主系统 
+def reserve_sys():
+    scc = getpass.getpass('进入预约，press Enter to continue...')
+    if encipher(scc):
+        userData()
+    choose = input('\n是否查看座位? y/n   ')
+    if choose == 'y':
+        seatLook()
+        reserve_sys()
+    else:
+        input('press Enter to continue...')
+        os.system('cls')
+        print('进入预约系统...')
+        reserve_main()
+        print('60s 后关机 \n 你可以关闭程序来阻止\n')
+        time.sleep(50)
+        print('10s后关机，可能不太能阻止了...')
+        os.system('shutdown -s -f -t 10')
 
 # 主函数
 def main():
-    choose = input('\n***************************************\n* 欢迎使用图书馆自动预约-这是完全模式 *\n* 为避免座位的恶性再分配-请勿传播程序 *\n***************************************\n*        -在完成必要步骤后            *\n*      -软件将在00:00进行预约         *\n*       -预约完成自动关机             *\n*        ---键入y进入测试模式         *\n***************************************\n*         Powered by wenz_xv          *\n***************************************\n    是否测试：y/n ')
+    choose = input('\n***************************************\n* 欢迎使用图书馆自动预约-这是完全模式 *\n* 为避免座位的恶性再分配-请勿传播程序 *\n***************************************\n*        -在完成必要步骤后            *\n*      -软件将在00:00进行预约         *\n*       -预约完成自动关机             *\n*        ---键入y进入功能模块         *\n***************************************\n*         Powered by wenz_xv          *\n***************************************\n    是否进入功能模块：y/n ')
     if choose == 'y':
         test()
     # 主进程
-    choose = input('\n测试完成，是否继续测试? y/n   ')
+    choose = input('\n 是否回到模块? y/n   ')
     if choose == 'y':
         os.system('cls')
         main()
     else:
-        if encipher(''):
-            choose = input('\n是否查看座位? y/n   ')
-            if choose == 'y':
-                chose()
-            input('press Enter to continue...')
-            os.system('cls')
-            print('进入预约系统...')
-            reserve_main()
-            print('60s 后关机 \n 你可以关闭程序来阻止\n')
-            time.sleep(50)
-            print('10s后关机，可能不太能阻止了...')
-            os.system('shutdown -s -f -t 10')
+        reserve_sys()
 
-
-main()
+if encipher(' '):
+    os.system('cls')
+    main()

@@ -1,9 +1,7 @@
-import hashlib
+import requests,json
 
-
-def encipher():
-    ipt = input('s')
-    hl = hashlib.md5()
-    hl.update(ipt.encode(encoding='utf-8'))
-    if hl.hexdigest() == 'bcedc450f8481e89b1445069acdc3dd9':
-        return True
+judurl = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/login.aspx?act=is_login'
+repj = json.loads(requests.get(judurl).text)
+input(repj)
+if repj['ret'] == 0:
+    input('ys')
