@@ -10,6 +10,43 @@ import hashlib
 
 #V2.0_测试
 
+# 从config读数据
+
+
+def readSeat(conf, seat):
+    date = str(datetime.date.today() + datetime.timedelta(days=2))
+    start_time = conf.get(seat, 'reserve_start_time')
+    end_time = conf.get(seat, 'reserve_end_time')
+    seat_source = conf.get(seat, 'seat')
+    seat = getSeatId(seat_source)
+    return [seat, date, start_time, end_time]
+
+
+# 从conf里读取数据
+def confDeal():
+    conf = configparser.ConfigParser()
+    conf.read('./user_data.cfg')
+    # 读取用户数据
+    uid = conf.get('user_set', 'user_id')
+    pwd = conf.get('user_set', 'user_password')
+    if pwd == '000000':
+        pwd = input('输入密码:')
+        os.system('cls')
+    user = [uid,pwd]
+    # 读取座位是否启用
+    flag1 = conf.get('seat_set_1', 'flag')
+    flag2 = conf.get('seat_set_2', 'flag')
+    # 读取座位1
+    arr1 = readSeat(conf, 'seat_set')
+    if flag1 == 'true':
+        arr2 = readSeat(conf, 'seat_set_1')
+    else:
+        arr2 = False
+    if flag2 == 'true':
+        arr3 = readSeat(conf, 'seat_set_2')
+    else:
+        arr3 = False
+    return [user, arr1, arr2, arr3]
 
 
 # 登陆
@@ -70,23 +107,8 @@ def reserve(arr, cookies):
 
 # 转换座位id
 def getSeatId(seat):
-    print('\n 寻找你的座位id...')
+    print('\n 寻找你的座位...')
     date = str(datetime.date.today())
-    seatObj = getJson(date)
-    for e in seatObj:
-        newe = fil_ter(e)
-        if e['title'] == seat:
-            print('校对你的座位信息:')
-            for item in newe:
-                print(item, newe[item])
-            time.sleep(3)
-            return newe['devId']
-    print('cannot find the seat.\n please try again\n')
-    s = input('输入座位：')
-    getSeatId(s)
-
-# 获取座位信息
-def getJson(date):
     url = 'http://ic.zju.edu.cn/ClientWeb/pro/ajax/device.aspx'
     params = {
         'date': date,
@@ -94,57 +116,21 @@ def getJson(date):
     }
     rep = requests.get(url, params=params)
     content = json.loads(rep.text)
-    return content['data']
+    seatObj = content['data']
+    for obj in seatObj:
+        if obj['title'] == seat:
+            print('\n 校对你的座位信息:')
+            retxt = '\n className: ' + str(obj['className'])+'   labName: ' + str(obj['labName'])+'   kindName: ' + str(obj['kindName'])+' devName: ' + str(obj['devName'])+'\n open_time: ' + '-'.join(obj['open'])+'   devId: ' + str(obj['devId'])
+            print(retxt)
+            time.sleep(3)
+            return obj['devId']
+    print('cannot find the seat.\n please try again\n')
+    s = input('输入座位：')
+    getSeatId(s)
 
 
-def fil_ter(obj):
-    reobj = {
-        'className':  obj['className'],
-        'labName': obj['labName'],
-        'kindName': obj['kindName'],
-        'devName': obj['devName'],
-        'open_time': '-'.join(obj['open']),
-        'devId': obj['devId']
-    }
-    return reobj
-
-# 从config读数据
 
 
-def readSeat(conf, seat):
-    date = str(datetime.date.today() + datetime.timedelta(days=1))
-    start_time = conf.get(seat, 'reserve_start_time')
-    end_time = conf.get(seat, 'reserve_end_time')
-    seat_source = conf.get(seat, 'seat')
-    seat = getSeatId(seat_source)
-    return [seat, date, start_time, end_time]
-
-
-# 从conf里读取数据
-def confDeal():
-    conf = configparser.ConfigParser()
-    conf.read('./user_data.cfg')
-    # 读取用户数据
-    uid = conf.get('user_set', 'user_id')
-    pwd = conf.get('user_set', 'user_password')
-    if pwd == '000000':
-        pwd = input('输入密码:')
-        os.system('cls')
-    user = [uid,pwd]
-    # 读取座位是否启用
-    flag1 = conf.get('seat_set_1', 'flag')
-    flag2 = conf.get('seat_set_2', 'flag')
-    # 读取座位1
-    arr1 = readSeat(conf, 'seat_set')
-    if flag1 == 'true':
-        arr2 = readSeat(conf, 'seat_set_1')
-    else:
-        arr2 = False
-    if flag2 == 'true':
-        arr3 = readSeat(conf, 'seat_set_2')
-    else:
-        arr3 = False
-    return [user, arr1, arr2, arr3]
 
 
 # 预约主体：获取sid、登陆、预约
