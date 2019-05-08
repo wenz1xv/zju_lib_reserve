@@ -185,7 +185,7 @@ def SetTime(set_time):
                 return True
         elif H > 1:
             sys.stdout.write('\r{0}'.format(
-                '设定时间：'+set_time + '  现在时间:'+now+'  待机时间：'+str(count)))
+                '剩余：'+str(round(H+M/60, 1)) + '小时,待机中...'))
             time.sleep(360)
             sys.stdout.flush()
         elif sleepTime > 120:

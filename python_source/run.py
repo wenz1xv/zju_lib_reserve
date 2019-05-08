@@ -77,7 +77,7 @@ def login(arr, cookies):
             print('login failed')
             ide = input('id:')
             pwde = input('pwd')
-            login([ide,pwde],cookies)
+            return login([ide,pwde],cookies)
 
 
 # 预约座位
@@ -129,10 +129,6 @@ def getSeatId(seat):
     getSeatId(s)
 
 
-
-
-
-
 # 预约主体：获取sid、登陆、预约
 def reserve_main():
     main_url = 'http://ic.zju.edu.cn/ClientWeb/xcus/ic2/Default.aspx'
@@ -149,50 +145,41 @@ def reserve_main():
         time.sleep(2)
         os.system('cls')
         if SetTime():
-            reserve(seat, Cookies)
-            if seat1 != False:
-                reserve(seat1, Cookies)
-            if seat2 != False:
-                reserve(seat2, Cookies)
+            if login(user,Cookies):
+                reserve(seat, Cookies)
+                if seat1 != False:
+                    reserve(seat1, Cookies)
+                if seat2 != False:
+                    reserve(seat2, Cookies)
 
 
 # 定时判断器
 def SetTime():
-    set_time = '24:00:03'
+    set_time = '24:00'
     print('定时器启动...')
-    count = 3
     while True:
         now = time.strftime('%H:%M:%S', time.localtime(time.time()))
-        H = int(set_time.split(':')[0]) - int(now.split(':')[0])
-        M = int(set_time.split(':')[1]) - int(now.split(':')[1])
-        S = int(set_time.split(':')[2]) - int(now.split(':')[2])
-        sleepTime = M*60+S+H*3600
-        if H > 23:
-            sys.stdout.write('\r{0}'.format('设定时间：'+set_time + '  现在时间:'+now+'  待机时间：'+str(count)))
+        nowm = time.strftime('%H:%M', time.localtime(time.time()))
+        H = 24 - int(now.split(':')[0])
+        M = int(now.split(':')[1])
+        S = int(now.split(':')[2])
+        sleepTime = H*3600-M*60-S
+        if nowm == '00:00' :
             time.sleep(1)
             sys.stdout.flush()
-            count = count - 1
-            if count < 1:
-                print('\n now!')
-                return True
+            return True
         elif H > 1:
-            sys.stdout.write('\r{0}'.format(
-                '剩余：'+str(round(H+M/60, 1)) + '小时,待机中...'))
+            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(H-M/60)))
             time.sleep(360)
             sys.stdout.flush()
         elif sleepTime > 120:
-            sys.stdout.write('\r{0}'.format(
-                '剩余：'+str(round(H*60+M+S/60, 1)) + '分钟,待机中...'))
+            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(H*60-M-S/60)))
             time.sleep(6)
             sys.stdout.flush()
-        elif sleepTime > 3:
-            sys.stdout.write('\r{0}'.format(
-                '设定时间：'+set_time + '  现在时间:'+now+'  待机时间：'+str(sleepTime)))
+        else:
+            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(sleepTime)))
             time.sleep(1)
             sys.stdout.flush()
-        else:
-            input('wrong')
-
 # 验证
 def encipher():
     ipt = input('验证码：')
