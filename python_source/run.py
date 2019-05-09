@@ -89,7 +89,7 @@ def reserve(arr, cookies):
     date = arr[1]
     st = arr[2]
     et = arr[3]
-    # 开始时间格式:2019-4-20 09:10
+    # url传入开始时间格式:2019-4-20 09:10
     s_t = date+' '+st[0:2]+':'+st[2:]
     e_t = date+' '+et[0:2]+':'+et[2:]
     params = {
@@ -153,7 +153,7 @@ def reserve_main():
                     reserve(seat2, Cookies)
 
 
-# 定时判断器
+# 定时判断器只能提前一天——还未开放
 def SetTime():
     set_time = '24:00'
     print('定时器启动...')
@@ -164,16 +164,16 @@ def SetTime():
         M = int(now.split(':')[1])
         S = int(now.split(':')[2])
         sleepTime = H*3600-M*60-S
-        if nowm == '00:00' :
-            time.sleep(1)
-            sys.stdout.flush()
+        if nowm == '00:00':
+            print('零点，待机十秒')
+            time.sleep(10)
             return True
         elif H > 1:
-            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(H-M/60)))
+            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(round(H-M/60,1))))
             time.sleep(360)
             sys.stdout.flush()
         elif sleepTime > 120:
-            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(H*60-M-S/60)))
+            sys.stdout.write('\r{0}'.format('现在时间:'+now+'  待机时间：'+str(round(H*60-M-S/60,1))))
             time.sleep(6)
             sys.stdout.flush()
         else:
