@@ -104,6 +104,19 @@ def reserve(arr, cookies):
     }
     rep = requests.get(url, params=params, cookies=cookies)
     print(rep, '\n', rep.text)
+    rept = ''
+    rept = rept + rep.text +'\n'
+    repj = json.loads(rep.text)
+    if repj['msg'] == '操作成功！':
+        now = time.strftime('%H:%M:%S', time.localtime(time.time()))
+        rept = rept + now
+        seat_file = open('logfile.log', 'w')
+        seat_file.write(rept)
+        seat_file.close()
+    else:
+        time.sleep(10)
+        reserve(arr,cookies)
+
 
 # 转换座位id
 def getSeatId(seat):
@@ -155,7 +168,6 @@ def reserve_main():
 
 # 定时判断器只能提前一天——还未开放
 def SetTime():
-    set_time = '24:00'
     print('定时器启动...')
     while True:
         now = time.strftime('%H:%M:%S', time.localtime(time.time()))
@@ -165,6 +177,10 @@ def SetTime():
         S = int(now.split(':')[2])
         sleepTime = H*3600-M*60-S
         if nowm == '00:00':
+            print('零点，待机三十秒')
+            time.sleep(30)
+            return True
+        elif H > 23:
             print('零点，待机十秒')
             time.sleep(10)
             return True
