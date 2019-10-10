@@ -1,11 +1,10 @@
-import requests
-import json
-import time
-import os
-import configparser
-import sys
-import datetime
-import hashlib
+import requests #需要安装
+import json #内置
+import time #内置
+import os #内置
+import configparser #内置
+import sys #内置
+import datetime #内置
 
 #V2.1,独立运行,自动生成配置文件,部分验证
 
@@ -311,20 +310,5 @@ def main():
     else:
         input()
 
-# 验证
-def encipher(ipt):
-    hl = hashlib.md5()
-    hl.update(ipt.encode(encoding='utf-8'))
-    if hl.hexdigest() == 'bcedc450f8481e89b1445069acdc3dd9':
-        return 1
-    elif ipt == 'test':
-        return 2
-
-en = input('验证码：')
-if encipher(en) == 1:
-    os.system('cls')
-    main()
-elif encipher(en) == 2:
-    os.system('cls')
-    test()
+main()
     
