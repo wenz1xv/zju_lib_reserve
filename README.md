@@ -17,7 +17,7 @@ python3
 ### Python下运行
 1. 安装python3、pip
 2. 使用前安装好依赖库(pip install request)
-3. 运行[Run_V2.1.py](https://github.com/wenz1xv/zju_lib_reserve/raw/master/Run_v2.1.py) (右键链接另存为)
+3. 运行[Run_V2.1.py](https://github.com/wenz1xv/zju_lib_reserve/raw/master/Run_v2.1.py) (右键链接另存为下载)
 
 ### exe下运行
 不咕的话会有的。。。
