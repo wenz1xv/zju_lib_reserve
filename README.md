@@ -12,9 +12,9 @@ python3
 
 ## 使用
 ### Python下运行
-1、安装python3、pip
-2、使用前安装好依赖库(pip install request)
-3、运行Run_V2.1.py
+1. 安装python3、pip
+2. 使用前安装好依赖库(pip install request)
+3. 运行Run_V2.1.py
 
 ### exe下运行
 不咕的话会有的。。。
